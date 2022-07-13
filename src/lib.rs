@@ -1,3 +1,5 @@
+type Result<T, E = ParseError> = std::result::Result<T, E>;
+
 #[derive(Debug)]
 pub enum JsonValue {
     Null,
@@ -12,7 +14,11 @@ pub enum ParseError {
     Invalid,
 }
 
-pub fn parse(src: &str) -> Result<JsonValue, ParseError> {
+pub fn parse(src: &str) -> Result<JsonValue> {
+    todo!()
+}
+
+fn number(src: &str) -> Result<JsonValue> {
     todo!()
 }
 
