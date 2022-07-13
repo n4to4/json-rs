@@ -1,14 +1,28 @@
-pub struct Json;
+#[derive(Debug)]
+pub enum JsonValue {
+    Null,
+    Number(f64),
+    String(String),
+    // Array
+    // Object
+}
 
-pub fn parse(src: &str) -> Json {
+#[derive(Debug)]
+pub enum ParseError {
+    Invalid,
+}
+
+pub fn parse(src: &str) -> Result<JsonValue, ParseError> {
     todo!()
 }
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+
     #[test]
-    fn it_works() {
-        let result = 2 + 2;
-        assert_eq!(result, 4);
+    fn parse_simple() {
+        let actual = parse("42").unwrap();
+        assert!(matches!(actual, JsonValue::Number(n) if n == 42.0));
     }
 }
