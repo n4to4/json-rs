@@ -1,3 +1,5 @@
+mod scanner;
+
 type Result<T, E = ParseError> = std::result::Result<T, E>;
 
 #[derive(Debug)]
