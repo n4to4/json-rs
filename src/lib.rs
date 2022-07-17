@@ -25,14 +25,3 @@ pub fn parse(src: &str) -> Result<JsonValue> {
 fn number(src: &str) -> Result<JsonValue> {
     todo!()
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn parse_simple() {
-        let actual = parse("42").unwrap();
-        assert!(matches!(actual, JsonValue::Number(n) if n == 42.0));
-    }
-}
