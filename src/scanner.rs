@@ -1,11 +1,17 @@
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) enum JsonToken {
-    LBrace,
-    RBrace,
-    //Number(f64),
+    LeftBrace,
+    RightBrace,
+    LeftSquareBracket,
+    RightSquareBracket,
+    Colon,
+    Comma,
+
+    Number(u64),
     String(String),
-    // Array
-    // Object
+    Null,
+
+    EOF,
 }
 
 #[derive(Debug)]
@@ -32,10 +38,13 @@ impl Scanner {
     }
 
     fn scan_token(&mut self) -> anyhow::Result<()> {
-        match self.advance() {
-            Some(b'"') => self.string()?,
-            Some(_) => {}
-            None => {}
+        if let Some(c) = self.advance() {
+            match c {
+                b'"' => self.string()?,
+                _ => todo!(),
+            }
+        } else {
+            self.tokens.push(JsonToken::EOF);
         }
         Ok(())
     }
