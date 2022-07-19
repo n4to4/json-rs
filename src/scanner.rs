@@ -14,6 +14,12 @@ pub(crate) enum JsonToken {
     EOF,
 }
 
+#[derive(Debug, thiserror::Error)]
+pub(crate) enum ScanError {
+    #[error("syntax error")]
+    SyntaxError,
+}
+
 #[derive(Debug)]
 pub(crate) struct Scanner {
     tokens: Vec<JsonToken>,
@@ -41,7 +47,20 @@ impl Scanner {
         if let Some(c) = self.advance() {
             match c {
                 b'"' => self.string()?,
-                _ => todo!(),
+                b'{' => self.tokens.push(JsonToken::LeftBrace),
+                b'}' => self.tokens.push(JsonToken::RightBrace),
+                b'[' => self.tokens.push(JsonToken::LeftSquareBracket),
+                b']' => self.tokens.push(JsonToken::RightSquareBracket),
+                b':' => self.tokens.push(JsonToken::Colon),
+                b',' => self.tokens.push(JsonToken::Comma),
+                b => {
+                    let c = b as char;
+                    if c.is_digit(10) {
+                        self.number();
+                    } else {
+                        return Err(ScanError::SyntaxError.into());
+                    }
+                }
             }
         } else {
             self.tokens.push(JsonToken::EOF);
@@ -75,6 +94,10 @@ impl Scanner {
         self.tokens.push(JsonToken::String(s));
 
         Ok(())
+    }
+
+    fn number(&mut self) -> anyhow::Result<()> {
+        todo!()
     }
 }
 
