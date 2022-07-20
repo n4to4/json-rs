@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) enum JsonToken {
     LeftBrace,
@@ -11,7 +13,7 @@ pub(crate) enum JsonToken {
     String(String),
     Null,
 
-    EOF,
+    Eof,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -54,16 +56,15 @@ impl Scanner {
                 b':' => self.tokens.push(JsonToken::Colon),
                 b',' => self.tokens.push(JsonToken::Comma),
                 b => {
-                    let c = b as char;
-                    if c.is_digit(10) {
-                        self.number();
+                    if b.is_ascii_digit() {
+                        self.number()?;
                     } else {
                         return Err(ScanError::SyntaxError.into());
                     }
                 }
             }
         } else {
-            self.tokens.push(JsonToken::EOF);
+            self.tokens.push(JsonToken::Eof);
         }
         Ok(())
     }
