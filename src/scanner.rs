@@ -27,6 +27,7 @@ pub(crate) struct Scanner {
     tokens: Vec<JsonToken>,
     source: String,
     bytes: Vec<u8>,
+    start: i64,
     current: i64,
 }
 
@@ -37,7 +38,8 @@ impl Scanner {
             tokens: Vec::new(),
             source,
             bytes,
-            current: -1,
+            start: 0,
+            current: 0,
         }
     }
 
@@ -73,8 +75,9 @@ impl Scanner {
         if self.is_at_end() {
             None
         } else {
+            let cur = self.current;
             self.current += 1;
-            Some(self.bytes[self.current as usize])
+            Some(self.bytes[cur as usize])
         }
     }
 
