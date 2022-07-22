@@ -43,8 +43,12 @@ impl Scanner {
         }
     }
 
-    pub(crate) fn scan_tokens(self) -> Vec<JsonToken> {
-        self.tokens
+    pub(crate) fn scan_tokens(mut self) -> anyhow::Result<Vec<JsonToken>> {
+        if !self.is_at_end() {
+            self.start = self.current;
+            self.scan_token()?;
+        }
+        Ok(self.tokens)
     }
 
     fn scan_token(&mut self) -> anyhow::Result<()> {
@@ -93,15 +97,20 @@ impl Scanner {
             }
             bytes.push(c);
         }
-
         let s = String::from_utf8(bytes)?;
         self.tokens.push(JsonToken::String(s));
-
         Ok(())
     }
 
     fn number(&mut self) -> anyhow::Result<()> {
-        todo!()
+        while let Some(c) = self.advance() {
+            if !c.is_ascii_digit() {
+                break;
+            }
+        }
+        let s = &self.source[self.start as usize..self.current as usize];
+        self.tokens.push(JsonToken::Number(s.parse()?));
+        Ok(())
     }
 }
 
@@ -112,10 +121,16 @@ mod tests {
     #[test]
     fn test_scan_string() {
         let json = r#""foo""#;
-        let mut scanner = Scanner::new(json.into());
-        scanner.scan_token().unwrap();
-        let tokens = scanner.scan_tokens();
-
+        let scanner = Scanner::new(json.into());
+        let tokens = scanner.scan_tokens().expect("should be successful");
         assert_eq!(&tokens, &[JsonToken::String(String::from("foo"))]);
+    }
+
+    #[test]
+    fn test_scan_number() {
+        let json = r#"42"#;
+        let scanner = Scanner::new(json.into());
+        let tokens = scanner.scan_tokens().expect("should be successful");
+        assert_eq!(&tokens, &[JsonToken::Number(42)]);
     }
 }
