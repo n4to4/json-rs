@@ -20,6 +20,10 @@ pub(crate) enum JsonToken {
 pub(crate) enum ScanError {
     #[error("syntax error")]
     SyntaxError,
+    #[error("unexpected EOF")]
+    UnexpectedEof,
+    #[error("cannot parse number")]
+    Number,
 }
 
 #[derive(Debug)]
@@ -43,7 +47,7 @@ impl Scanner {
         }
     }
 
-    pub(crate) fn scan_tokens(mut self) -> anyhow::Result<Vec<JsonToken>> {
+    pub(crate) fn scan_tokens(mut self) -> Result<Vec<JsonToken>, ScanError> {
         if !self.is_at_end() {
             self.start = self.current;
             self.scan_token()?;
@@ -52,7 +56,7 @@ impl Scanner {
         Ok(self.tokens)
     }
 
-    fn scan_token(&mut self) -> anyhow::Result<()> {
+    fn scan_token(&mut self) -> Result<(), ScanError> {
         if let Some(c) = self.advance() {
             match c {
                 b'"' => self.string()?,
@@ -66,7 +70,7 @@ impl Scanner {
                     if b.is_ascii_digit() {
                         self.number()?;
                     } else {
-                        return Err(ScanError::SyntaxError.into());
+                        return Err(ScanError::SyntaxError);
                     }
                 }
             }
@@ -88,26 +92,26 @@ impl Scanner {
         self.current >= self.bytes.len()
     }
 
-    fn string(&mut self) -> anyhow::Result<()> {
+    fn string(&mut self) -> Result<(), ScanError> {
         while let Some(c) = self.advance() {
             if c == b'"' {
-                break;
+                let s = &self.source[self.start + 1..self.current - 1];
+                self.tokens.push(JsonToken::String(s.to_owned()));
+                return Ok(());
             }
         }
-        let s = &self.source[self.start + 1..self.current - 1];
-        let s = s.to_owned();
-        self.tokens.push(JsonToken::String(s));
-        Ok(())
+        Err(ScanError::UnexpectedEof)
     }
 
-    fn number(&mut self) -> anyhow::Result<()> {
+    fn number(&mut self) -> Result<(), ScanError> {
         while let Some(c) = self.advance() {
             if !c.is_ascii_digit() {
                 break;
             }
         }
         let s = &self.source[self.start..self.current];
-        self.tokens.push(JsonToken::Number(s.parse()?));
+        let n = s.parse().map_err(|_| ScanError::Number)?;
+        self.tokens.push(JsonToken::Number(n));
         Ok(())
     }
 }
@@ -126,6 +130,15 @@ mod tests {
             &tokens,
             &[JsonToken::String(String::from("foo")), JsonToken::Eof]
         );
+    }
+
+    #[test]
+    fn test_scan_string_error() {
+        let json = r#""foo"#;
+        let scanner = Scanner::new(json.into());
+        let ret = scanner.scan_tokens();
+
+        assert!(matches!(ret, Err(ScanError::UnexpectedEof)));
     }
 
     #[test]
