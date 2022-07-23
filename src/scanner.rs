@@ -48,6 +48,7 @@ impl Scanner {
             self.start = self.current;
             self.scan_token()?;
         }
+        self.tokens.push(JsonToken::Eof);
         Ok(self.tokens)
     }
 
@@ -69,8 +70,6 @@ impl Scanner {
                     }
                 }
             }
-        } else {
-            self.tokens.push(JsonToken::Eof);
         }
         Ok(())
     }
@@ -123,7 +122,11 @@ mod tests {
         let json = r#""foo""#;
         let scanner = Scanner::new(json.into());
         let tokens = scanner.scan_tokens().expect("should be successful");
-        assert_eq!(&tokens, &[JsonToken::String(String::from("foo"))]);
+
+        assert_eq!(
+            &tokens,
+            &[JsonToken::String(String::from("foo")), JsonToken::Eof]
+        );
     }
 
     #[test]
@@ -131,6 +134,7 @@ mod tests {
         let json = r#"42"#;
         let scanner = Scanner::new(json.into());
         let tokens = scanner.scan_tokens().expect("should be successful");
-        assert_eq!(&tokens, &[JsonToken::Number(42)]);
+
+        assert_eq!(&tokens, &[JsonToken::Number(42), JsonToken::Eof]);
     }
 }
