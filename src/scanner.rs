@@ -27,8 +27,8 @@ pub(crate) struct Scanner {
     tokens: Vec<JsonToken>,
     source: String,
     bytes: Vec<u8>,
-    start: i64,
-    current: i64,
+    start: usize,
+    current: usize,
 }
 
 impl Scanner {
@@ -80,23 +80,22 @@ impl Scanner {
         } else {
             let cur = self.current;
             self.current += 1;
-            Some(self.bytes[cur as usize])
+            Some(self.bytes[cur])
         }
     }
 
     fn is_at_end(&self) -> bool {
-        self.current >= self.bytes.len() as i64
+        self.current >= self.bytes.len()
     }
 
     fn string(&mut self) -> anyhow::Result<()> {
-        let mut bytes = Vec::new();
         while let Some(c) = self.advance() {
             if c == b'"' {
                 break;
             }
-            bytes.push(c);
         }
-        let s = String::from_utf8(bytes)?;
+        let s = &self.source[self.start + 1..self.current - 1];
+        let s = s.to_owned();
         self.tokens.push(JsonToken::String(s));
         Ok(())
     }
@@ -107,7 +106,7 @@ impl Scanner {
                 break;
             }
         }
-        let s = &self.source[self.start as usize..self.current as usize];
+        let s = &self.source[self.start..self.current];
         self.tokens.push(JsonToken::Number(s.parse()?));
         Ok(())
     }
