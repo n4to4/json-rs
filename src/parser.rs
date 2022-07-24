@@ -1,4 +1,4 @@
-use crate::scanner::Scanner;
+use crate::scanner::{JsonToken, ScanError, Scanner};
 use std::collections::HashMap;
 
 #[derive(Debug)]
@@ -12,22 +12,28 @@ pub enum JsonValue {
 
 #[derive(Debug)]
 pub enum ParseError {
+    ScanError(ScanError),
     Invalid,
 }
 
 #[derive(Debug)]
 pub struct Parser {
-    scanner: Scanner,
+    tokens: Vec<JsonToken>,
 }
 
 impl Parser {
-    pub fn new(src: String) -> Self {
-        Parser {
-            scanner: Scanner::new(src),
-        }
+    pub fn new(tokens: Vec<JsonToken>) -> Self {
+        Parser { tokens }
     }
 
-    pub fn parse() -> Result<JsonValue, ParseError> {
+    pub fn parse(self) -> Result<JsonValue, ParseError> {
         todo!()
     }
+}
+
+pub fn parse(src: String) -> Result<JsonValue, ParseError> {
+    let scanner = Scanner::new(src);
+    let tokens = scanner.scan_tokens().map_err(ParseError::ScanError)?;
+    let parser = Parser::new(tokens);
+    parser.parse()
 }

@@ -1,5 +1,5 @@
 #[derive(Debug, PartialEq, Eq)]
-pub(crate) enum JsonToken {
+pub enum JsonToken {
     LeftBrace,
     RightBrace,
     LeftSquareBracket,
@@ -15,7 +15,7 @@ pub(crate) enum JsonToken {
 }
 
 #[derive(Debug, thiserror::Error)]
-pub(crate) enum ScanError {
+pub enum ScanError {
     #[error("syntax error")]
     SyntaxError,
     #[error("unexpected EOF")]
