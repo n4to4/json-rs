@@ -1,11 +1,11 @@
 #[derive(Debug, PartialEq, Eq)]
 pub enum JsonToken {
-    LeftBrace,
-    RightBrace,
-    LeftSquareBracket,
-    RightSquareBracket,
-    Colon,
-    Comma,
+    LeftBrace,          // {
+    RightBrace,         // }
+    LeftSquareBracket,  // [
+    RightSquareBracket, // ]
+    Colon,              // :
+    Comma,              // ,
 
     Number(u64),
     String(String),

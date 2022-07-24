@@ -14,6 +14,7 @@ pub enum JsonValue {
 pub enum ParseError {
     ScanError(ScanError),
     Invalid,
+    EmptyInput,
 }
 
 #[derive(Debug)]
@@ -27,7 +28,15 @@ impl Parser {
     }
 
     pub fn parse(self) -> Result<JsonValue, ParseError> {
-        todo!()
+        let mut iter = self.tokens.into_iter().peekable();
+        if let Some(token) = iter.peek() {
+            match token {
+                JsonToken::LeftBrace => todo!(),
+                _ => todo!(),
+            }
+        } else {
+            Err(ParseError::EmptyInput)
+        }
     }
 }
 
