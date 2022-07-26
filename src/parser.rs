@@ -40,9 +40,20 @@ impl Parser {
     }
 }
 
-pub fn parse(src: String) -> Result<JsonValue, ParseError> {
-    let scanner = Scanner::new(src);
+pub fn parse(src: &str) -> Result<JsonValue, ParseError> {
+    let scanner = Scanner::new(src.to_owned());
     let tokens = scanner.scan_tokens().map_err(ParseError::ScanError)?;
     let parser = Parser::new(tokens);
     parser.parse()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse() {
+        let json = parse(r#"[42]"#).expect("parse failure");
+        assert!(matches!(json, JsonValue::Array(_)));
+    }
 }
