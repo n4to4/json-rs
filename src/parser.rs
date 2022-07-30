@@ -22,20 +22,21 @@ pub struct Parser {
     tokens: Vec<JsonToken>,
 }
 
+#[derive(Debug)]
+pub struct ParsedResult {
+    value: JsonValue,
+}
+
 impl Parser {
     pub fn new(tokens: Vec<JsonToken>) -> Self {
         Parser { tokens }
     }
 
-    pub fn parse(self) -> Result<JsonValue, ParseError> {
-        let mut iter = self.tokens.into_iter().peekable();
-        if let Some(token) = iter.peek() {
-            match token {
-                JsonToken::LeftBrace => todo!(),
-                _ => todo!(),
-            }
-        } else {
-            Err(ParseError::EmptyInput)
+    pub fn parse(&mut self) -> Result<JsonValue, ParseError> {
+        let mut i = 0;
+        match self.tokens[i] {
+            JsonToken::LeftSquareBracket => todo!(),
+            _ => todo!(),
         }
     }
 }
@@ -43,7 +44,7 @@ impl Parser {
 pub fn parse(src: &str) -> Result<JsonValue, ParseError> {
     let scanner = Scanner::new(src.to_owned());
     let tokens = scanner.scan_tokens().map_err(ParseError::ScanError)?;
-    let parser = Parser::new(tokens);
+    let mut parser = Parser::new(tokens);
     parser.parse()
 }
 
@@ -55,5 +56,12 @@ mod tests {
     fn test_parse() {
         let json = parse(r#"[42]"#).expect("parse failure");
         assert!(matches!(json, JsonValue::Array(_)));
+        match json {
+            JsonValue::Array(arr) => match &arr[..] {
+                &[JsonValue::Number(42)] => {}
+                _ => panic!("must be a vec"),
+            },
+            _ => panic!("must be an array"),
+        }
     }
 }
