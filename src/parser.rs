@@ -1,7 +1,9 @@
 use crate::scanner::{JsonToken, ScanError, Scanner};
 use std::collections::HashMap;
 
-#[derive(Debug)]
+type Result<T, E = ParseError> = std::result::Result<T, E>;
+
+#[derive(Debug, Clone)]
 pub enum JsonValue {
     Null,
     Number(u64),
@@ -20,24 +22,56 @@ pub enum ParseError {
 #[derive(Debug)]
 pub struct Parser {
     tokens: Vec<JsonToken>,
+    state: ParseState,
 }
 
-#[derive(Debug)]
-pub struct ParsedResult {
-    value: JsonValue,
+#[derive(Debug, Default)]
+pub struct ParseState {
+    current: usize,
+    parsed_value: Option<JsonValue>,
 }
 
 impl Parser {
     pub fn new(tokens: Vec<JsonToken>) -> Self {
-        Parser { tokens }
+        Parser {
+            tokens,
+            state: Default::default(),
+        }
     }
 
-    pub fn parse(&mut self) -> Result<JsonValue, ParseError> {
-        let mut i = 0;
-        match self.tokens[i] {
-            JsonToken::LeftSquareBracket => todo!(),
-            _ => todo!(),
+    pub fn parse(&mut self) -> Result<JsonValue> {
+        loop {
+            match self.advance() {
+                JsonToken::Eof => break,
+                JsonToken::LeftSquareBracket => {
+                    let arr = self.array()?;
+                    self.state.parsed_value = Some(JsonValue::Array(arr));
+                }
+                _ => todo!(),
+            }
         }
+        let parsed = self.state.parsed_value.take();
+        Ok(parsed.unwrap())
+    }
+
+    fn current_token(&self) -> JsonToken {
+        let cur = self.state.current;
+        self.tokens[cur].clone()
+    }
+
+    fn advance(&mut self) -> JsonToken {
+        let cur = self.state.current;
+        if cur < self.tokens.len() {
+            let tok = self.tokens[cur].clone();
+            self.state.current += 1;
+            tok
+        } else {
+            JsonToken::Eof
+        }
+    }
+
+    fn array(&mut self) -> Result<Vec<JsonValue>> {
+        Ok(vec![JsonValue::Number(42)])
     }
 }
 
