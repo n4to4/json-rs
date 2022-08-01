@@ -15,7 +15,7 @@ pub enum JsonValue {
 #[derive(Debug)]
 pub enum ParseError {
     ScanError(ScanError),
-    Invalid,
+    UnexpectedToken(JsonToken),
     EmptyInput,
 }
 
@@ -39,15 +39,29 @@ impl Parser {
         }
     }
 
-    pub fn parse(&mut self) -> Result<JsonValue> {
-        loop {
-            match self.advance() {
-                JsonToken::Eof => break,
-                JsonToken::LeftSquareBracket => {
-                    let arr = self.array()?;
-                    self.state.parsed_value = Some(JsonValue::Array(arr));
-                }
-                _ => todo!(),
+    pub fn expression(&mut self) -> Result<JsonValue> {
+        match self.advance() {
+            JsonToken::Eof => {}
+            JsonToken::Null => {
+                self.state.parsed_value = Some(JsonValue::Null);
+            }
+            JsonToken::Number(n) => {
+                self.state.parsed_value = Some(JsonValue::Number(n));
+            }
+            JsonToken::String(s) => {
+                self.state.parsed_value = Some(JsonValue::String(s));
+            }
+            // array
+            JsonToken::LeftSquareBracket => {
+                let arr = self.array()?;
+                self.state.parsed_value = Some(JsonValue::Array(arr));
+            }
+            // object
+            JsonToken::LeftBrace => {
+                todo!()
+            }
+            tok => {
+                return Err(ParseError::UnexpectedToken(tok));
             }
         }
         let parsed = self.state.parsed_value.take();
@@ -79,7 +93,7 @@ pub fn parse(src: &str) -> Result<JsonValue, ParseError> {
     let scanner = Scanner::new(src.to_owned());
     let tokens = scanner.scan_tokens().map_err(ParseError::ScanError)?;
     let mut parser = Parser::new(tokens);
-    parser.parse()
+    parser.expression()
 }
 
 #[cfg(test)]
@@ -87,7 +101,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_parse() {
+    fn test_parse_array() {
         let json = parse(r#"[42]"#).expect("parse failure");
         assert!(matches!(json, JsonValue::Array(_)));
         match json {
