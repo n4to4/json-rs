@@ -58,7 +58,8 @@ impl Parser {
             }
             // object
             JsonToken::LeftBrace => {
-                todo!()
+                let obj = self.object()?;
+                self.state.parsed_value = Some(JsonValue::Object(obj));
             }
             tok => {
                 return Err(ParseError::UnexpectedToken(tok));
@@ -86,6 +87,10 @@ impl Parser {
 
     fn array(&mut self) -> Result<Vec<JsonValue>> {
         Ok(vec![JsonValue::Number(42)])
+    }
+
+    fn object(&mut self) -> Result<HashMap<String, JsonValue>> {
+        todo!()
     }
 }
 
