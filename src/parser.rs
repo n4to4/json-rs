@@ -86,7 +86,19 @@ impl Parser {
     }
 
     fn array(&mut self) -> Result<Vec<JsonValue>> {
-        Ok(vec![JsonValue::Number(42)])
+        let mut v = Vec::new();
+        loop {
+            let tok = self.advance();
+            match tok {
+                JsonToken::RightSquareBracket => {
+                    return Ok(v);
+                }
+                JsonToken::Number(n) => {
+                    v.push(JsonValue::Number(n));
+                }
+                _ => todo!(),
+            }
+        }
     }
 
     fn object(&mut self) -> Result<HashMap<String, JsonValue>> {
@@ -107,14 +119,14 @@ mod tests {
 
     #[test]
     fn test_parse_array() {
-        let json = parse(r#"[42]"#).expect("parse failure");
+        let json = parse(r#"[42]"#).unwrap();
         assert!(matches!(json, JsonValue::Array(_)));
         match json {
             JsonValue::Array(arr) => match &arr[..] {
                 &[JsonValue::Number(42)] => {}
-                _ => panic!("must be a vec"),
+                _ => unreachable!(),
             },
-            _ => panic!("must be an array"),
+            _ => unreachable!(),
         }
     }
 }
