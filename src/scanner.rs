@@ -46,16 +46,18 @@ impl Scanner {
     }
 
     pub(crate) fn scan_tokens(mut self) -> Result<Vec<JsonToken>, ScanError> {
-        if !self.is_at_end() {
+        while !self.is_at_end() {
             self.start = self.current;
             self.scan_token()?;
         }
+        dbg!(&self.tokens);
         self.tokens.push(JsonToken::Eof);
         Ok(self.tokens)
     }
 
     fn scan_token(&mut self) -> Result<(), ScanError> {
         if let Some(c) = self.advance() {
+            dbg!(c as char);
             match c {
                 b'"' => self.string()?,
                 b'{' => self.tokens.push(JsonToken::LeftBrace),
@@ -74,6 +76,15 @@ impl Scanner {
             }
         }
         Ok(())
+    }
+
+    fn peek(&self) -> Option<u8> {
+        if self.is_at_end() {
+            None
+        } else {
+            let cur = self.current;
+            Some(self.bytes[cur])
+        }
     }
 
     fn advance(&mut self) -> Option<u8> {
@@ -102,12 +113,13 @@ impl Scanner {
     }
 
     fn number(&mut self) -> Result<(), ScanError> {
-        while let Some(c) = self.advance() {
+        while let Some(c) = self.peek() {
             if !c.is_ascii_digit() {
                 break;
             }
+            self.advance();
         }
-        let s = &self.source[self.start..self.current];
+        let s = dbg!(&self.source[self.start..self.current]);
         let n = s.parse().map_err(|_| ScanError::Number)?;
         self.tokens.push(JsonToken::Number(n));
         Ok(())
@@ -140,11 +152,23 @@ mod tests {
     }
 
     #[test]
-    fn test_scan_number() {
+    fn test_scan_number1() {
         let json = r#"42"#;
         let scanner = Scanner::new(json.into());
-        let tokens = scanner.scan_tokens().expect("should be successful");
+        let tokens = scanner.scan_tokens().unwrap();
 
         assert_eq!(&tokens, &[JsonToken::Number(42), JsonToken::Eof]);
+    }
+
+    #[test]
+    fn test_scan_number2() {
+        let json = r#"42,"#;
+        let scanner = Scanner::new(json.into());
+        let tokens = scanner.scan_tokens().unwrap();
+
+        assert_eq!(
+            &tokens,
+            &[JsonToken::Number(42), JsonToken::Comma, JsonToken::Eof]
+        );
     }
 }

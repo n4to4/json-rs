@@ -16,6 +16,7 @@ pub enum JsonValue {
 pub enum ParseError {
     ScanError(ScanError),
     UnexpectedToken(JsonToken),
+    SyntaxError,
     EmptyInput,
 }
 
@@ -33,6 +34,7 @@ pub struct ParseState {
 
 impl Parser {
     pub fn new(tokens: Vec<JsonToken>) -> Self {
+        dbg!(&tokens);
         Parser {
             tokens,
             state: Default::default(),
@@ -86,14 +88,15 @@ impl Parser {
     }
 
     fn matches(&mut self, one_of: Vec<JsonToken>) -> Option<JsonToken> {
-        let cur = self.state.current + 1;
+        let cur = self.state.current;
         if cur >= self.tokens.len() {
             return None;
         }
-        let peek = &self.tokens[cur];
+        let peek = dbg!(self.tokens[cur].clone());
         for tok in &one_of {
-            if *peek == *tok {
-                return Some(peek.clone());
+            if peek == *tok {
+                self.advance();
+                return Some(peek);
             }
         }
         None
@@ -103,14 +106,52 @@ impl Parser {
         let mut v = Vec::new();
         loop {
             let tok = self.advance();
-            match tok {
+            dbg!(self.current_token());
+            match dbg!(tok) {
                 JsonToken::RightSquareBracket => {
                     return Ok(v);
                 }
                 JsonToken::Number(n) => {
                     v.push(JsonValue::Number(n));
+                    match dbg!(self.matches(vec![JsonToken::Comma, JsonToken::RightSquareBracket]))
+                    {
+                        Some(JsonToken::Comma) => {}
+                        Some(JsonToken::RightSquareBracket) => {
+                            return Ok(v);
+                        }
+                        Some(t) => return Err(ParseError::UnexpectedToken(t)),
+                        None => {
+                            return Err(ParseError::SyntaxError);
+                        }
+                    }
                 }
-                _ => todo!(),
+                JsonToken::String(s) => {
+                    v.push(JsonValue::String(s));
+                    match self.matches(vec![JsonToken::Comma, JsonToken::RightSquareBracket]) {
+                        Some(JsonToken::Comma) => {}
+                        Some(JsonToken::RightSquareBracket) => {
+                            return Ok(v);
+                        }
+                        Some(t) => return Err(ParseError::UnexpectedToken(t)),
+                        None => {
+                            return Err(ParseError::SyntaxError);
+                        }
+                    }
+                }
+                JsonToken::Null => {
+                    v.push(JsonValue::Null);
+                    match self.matches(vec![JsonToken::Comma, JsonToken::RightSquareBracket]) {
+                        Some(JsonToken::Comma) => {}
+                        Some(JsonToken::RightSquareBracket) => {
+                            return Ok(v);
+                        }
+                        Some(t) => return Err(ParseError::UnexpectedToken(t)),
+                        None => {
+                            return Err(ParseError::SyntaxError);
+                        }
+                    }
+                }
+                _ => return Err(ParseError::SyntaxError),
             }
         }
     }
@@ -133,7 +174,7 @@ mod tests {
 
     #[test]
     fn test_parse_array() {
-        let json = parse(r#"[42]"#).unwrap();
+        let json = dbg!(parse(r#"[42]"#)).unwrap();
         assert!(matches!(json, JsonValue::Array(_)));
         match json {
             JsonValue::Array(arr) => match &arr[..] {
