@@ -85,6 +85,20 @@ impl Parser {
         }
     }
 
+    fn matches(&mut self, one_of: Vec<JsonToken>) -> Option<JsonToken> {
+        let cur = self.state.current + 1;
+        if cur >= self.tokens.len() {
+            return None;
+        }
+        let peek = &self.tokens[cur];
+        for tok in &one_of {
+            if *peek == *tok {
+                return Some(peek.clone());
+            }
+        }
+        None
+    }
+
     fn array(&mut self) -> Result<Vec<JsonValue>> {
         let mut v = Vec::new();
         loop {
