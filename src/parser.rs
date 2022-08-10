@@ -34,7 +34,6 @@ pub struct ParseState {
 
 impl Parser {
     pub fn new(tokens: Vec<JsonToken>) -> Self {
-        dbg!(&tokens);
         Parser {
             tokens,
             state: Default::default(),
@@ -92,7 +91,7 @@ impl Parser {
         if cur >= self.tokens.len() {
             return None;
         }
-        let peek = dbg!(self.tokens[cur].clone());
+        let peek = self.tokens[cur].clone();
         for tok in &one_of {
             if peek == *tok {
                 self.advance();
@@ -106,15 +105,14 @@ impl Parser {
         let mut v = Vec::new();
         loop {
             let tok = self.advance();
-            dbg!(self.current_token());
-            match dbg!(tok) {
+            self.current_token();
+            match tok {
                 JsonToken::RightSquareBracket => {
                     return Ok(v);
                 }
                 JsonToken::Number(n) => {
                     v.push(JsonValue::Number(n));
-                    match dbg!(self.matches(vec![JsonToken::Comma, JsonToken::RightSquareBracket]))
-                    {
+                    match self.matches(vec![JsonToken::Comma, JsonToken::RightSquareBracket]) {
                         Some(JsonToken::Comma) => {}
                         Some(JsonToken::RightSquareBracket) => {
                             return Ok(v);
@@ -174,7 +172,7 @@ mod tests {
 
     #[test]
     fn test_parse_array() {
-        let json = dbg!(parse(r#"[42]"#)).unwrap();
+        let json = parse(r#"[42]"#).unwrap();
         assert!(matches!(json, JsonValue::Array(_)));
         match json {
             JsonValue::Array(arr) => match &arr[..] {

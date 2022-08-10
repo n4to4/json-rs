@@ -50,14 +50,12 @@ impl Scanner {
             self.start = self.current;
             self.scan_token()?;
         }
-        dbg!(&self.tokens);
         self.tokens.push(JsonToken::Eof);
         Ok(self.tokens)
     }
 
     fn scan_token(&mut self) -> Result<(), ScanError> {
         if let Some(c) = self.advance() {
-            dbg!(c as char);
             match c {
                 b'"' => self.string()?,
                 b'{' => self.tokens.push(JsonToken::LeftBrace),
@@ -119,7 +117,7 @@ impl Scanner {
             }
             self.advance();
         }
-        let s = dbg!(&self.source[self.start..self.current]);
+        let s = &self.source[self.start..self.current];
         let n = s.parse().map_err(|_| ScanError::Number)?;
         self.tokens.push(JsonToken::Number(n));
         Ok(())
