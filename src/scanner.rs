@@ -67,6 +67,8 @@ impl Scanner {
                 b => {
                     if b.is_ascii_digit() {
                         self.number()?;
+                    } else if b.is_ascii_whitespace() {
+                        // skip
                     } else {
                         return Err(ScanError::SyntaxError);
                     }

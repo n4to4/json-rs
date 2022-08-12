@@ -172,11 +172,11 @@ mod tests {
 
     #[test]
     fn test_parse_array() {
-        let json = parse(r#"[42]"#).unwrap();
+        let json = parse(r#"[1, 2]"#).unwrap();
         assert!(matches!(json, JsonValue::Array(_)));
         match json {
             JsonValue::Array(arr) => match &arr[..] {
-                &[JsonValue::Number(42)] => {}
+                &[JsonValue::Number(1), JsonValue::Number(2)] => {}
                 _ => unreachable!(),
             },
             _ => unreachable!(),
