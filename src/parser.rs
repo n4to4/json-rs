@@ -162,7 +162,7 @@ impl Parser {
 pub fn parse(src: &str) -> Result<JsonValue, ParseError> {
     let scanner = Scanner::new(src.to_owned());
     let tokens = scanner.scan_tokens().map_err(ParseError::ScanError)?;
-    let mut parser = Parser::new(tokens);
+    let mut parser = Parser::new(dbg!(tokens));
     parser.expression()
 }
 
@@ -171,7 +171,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_parse_array() {
+    fn parse_array() {
         let json = parse(r#"[1, 2]"#).unwrap();
         assert!(matches!(json, JsonValue::Array(_)));
         match json {
@@ -181,5 +181,11 @@ mod tests {
             },
             _ => unreachable!(),
         }
+    }
+
+    #[test]
+    fn parse_null() {
+        let json = parse(r#"null"#).unwrap();
+        assert!(matches!(json, JsonValue::Null));
     }
 }

@@ -69,6 +69,15 @@ impl Scanner {
                         self.number()?;
                     } else if b.is_ascii_whitespace() {
                         // skip
+                    } else if b == b'n' {
+                        if self.peekn(3) == Some(b"ull") {
+                            self.advance();
+                            self.advance();
+                            self.advance();
+                            self.tokens.push(JsonToken::Null);
+                        } else {
+                            return Err(ScanError::SyntaxError);
+                        }
                     } else {
                         return Err(ScanError::SyntaxError);
                     }
@@ -84,6 +93,16 @@ impl Scanner {
         } else {
             let cur = self.current;
             Some(self.bytes[cur])
+        }
+    }
+
+    fn peekn(&self, n: usize) -> Option<&[u8]> {
+        let cur = self.current;
+        let len = self.bytes.len();
+        if cur + n <= len {
+            Some(&self.bytes[cur..cur + n])
+        } else {
+            None
         }
     }
 
